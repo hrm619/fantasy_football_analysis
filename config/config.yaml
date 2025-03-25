@@ -1,0 +1,44 @@
+# Main configuration file for Fantasy Football Analysis
+
+# Paths
+data_paths:
+  raw_data: "data/raw/"
+  processed_data: "data/processed/"
+  output_path: "outputs/"
+
+# League settings
+league:
+  teams: 12
+  scoring: "half_ppr"
+  roster:
+    qb: 1
+    rb: 2
+    wr: 2
+    te: 1
+    flex: 1  # WR/RB/TE
+    def: 1
+
+# Analysis parameters
+analysis:
+  season: 2024
+  baseline_values:
+    qb: 12  # QB12 is baseline
+    rb: 24  # RB24 is baseline
+    wr: 24  # WR24 is baseline
+    te: 12  # TE12 is baseline
+  performance_tiers:
+    significant_over: 0.2  # >20% better than projected
+    moderate_over: 0.05   # 5-20% better
+    met_expectations: 0.05  # ±5%
+    moderate_under: 0.2   # 5-20% worse
+    significant_under: 0.2  # >20% worse
+
+# Visualization settings
+visualization:
+  color_palette: "viridis"
+  team_colors_file: "config/team_colors.yaml"
+  position_colors:
+    QB: "#FF9999"
+    RB: "#99FF99"
+    WR: "#9999FF"
+    TE: "#FFFF99"

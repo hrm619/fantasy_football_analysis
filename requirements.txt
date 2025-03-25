@@ -1,0 +1,26 @@
+# Core data packages
+pandas==2.0.1
+numpy==1.24.3
+scipy==1.12.0
+
+# Visualization
+matplotlib==3.7.1
+seaborn==0.12.2
+plotly==5.18.0
+dash==2.13.0
+dash-bootstrap-components==1.5.0
+
+# Machine learning
+scikit-learn==1.3.0
+
+# Data management
+pyyaml==6.0.1
+
+# Testing
+pytest==7.4.0
+
+# Utilities
+jupyter==1.0.0
+notebook==7.0.2
+ipywidgets==8.1.0
+tqdm==4.66.1
