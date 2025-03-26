@@ -17,9 +17,9 @@ setup(
         "dash-bootstrap-components>=1.5.0",
     ],
     python_requires=">=3.9",
-    author="Data Science Team",
-    author_email="data@example.com",
-    description="Fantasy Football Analysis for 2025 Season",
+    author="hm",
+    author_email="hrm619@gmail.com",
+    description="Fantasy Football Analysis of 2024 Season",
     keywords="fantasy, football, analysis, data science",
     entry_points={
         "console_scripts": [
