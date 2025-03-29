@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Use these tools
+
+- Backend in Python
+- Frontend in HTML and JavaScript
+- Store data in SQL databases, never JSON files
+- Write tests in Python

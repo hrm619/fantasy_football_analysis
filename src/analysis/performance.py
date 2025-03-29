@@ -351,9 +351,14 @@ def analyze_expectation_vs_performance(df: pd.DataFrame) -> pd.DataFrame:
                     # Create new column name for delta
                     delta_col = f"{proj_col}_vs_Actual_Delta"
 
-                    # Extract numeric rank from string format (e.g., "RB1" → 1)
+                    # Convert to string and handle NaN values before extracting numeric rank
                     result_df[f"{proj_col}_Numeric"] = (
-                        result_df[proj_col].str.extract(r"(\d+)").astype(float)
+                        result_df[proj_col]
+                        .fillna("")
+                        .astype(str)
+                        .str.extract(r"(\d+)")
+                        .astype(float)
+                        .fillna(np.nan)
                     )
 
                     # Calculate delta

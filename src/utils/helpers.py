@@ -1,3 +1,4 @@
+import os
 import pandas as pd
 import numpy as np
 import logging
@@ -173,3 +174,23 @@ def categorize_adp_vs_performance(df: pd.DataFrame, adp_col: str, rank_col: str,
         )
     
     return result_df
+
+def ensure_output_directories(base_path: str = "..") -> None:
+    """
+    Create necessary output directories if they don't exist.
+    
+    Args:
+        base_path: Base path relative to the current directory
+    """
+    # Define required directories
+    directories = [
+        os.path.join(base_path, "outputs"),
+        os.path.join(base_path, "outputs", "figures"),
+        os.path.join(base_path, "outputs", "data"),
+        os.path.join(base_path, "outputs", "reports")
+    ]
+    
+    # Create each directory
+    for directory in directories:
+        os.makedirs(directory, exist_ok=True)
+        logger.info(f"Ensured directory exists: {directory}")

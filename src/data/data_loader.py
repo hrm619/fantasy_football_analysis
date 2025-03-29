@@ -46,6 +46,20 @@ def load_csv_data(file_path: str, validate: bool = True) -> pd.DataFrame:
         logger.info(f"Loading data from {file_path}")
         df = pd.read_csv(file_path)
 
+        # Clean team data if it's the team stats file
+        if "Team Stats" in file_path:
+            # Remove empty rows
+            df = df.dropna(subset=['Team (Full)', 'Team (Alt)', 'Team'])
+            df = df[df['Team (Full)'].str.strip() != '']
+            
+            # Convert numeric columns
+            numeric_cols = ['PF', 'Yds', 'Passing Att', 'Passing Yds', 'Rushing Att', 'Rushing Yds']
+            for col in numeric_cols:
+                if col in df.columns:
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+            
+            logger.info(f"Cleaned team data shape: {df.shape}")
+
         # Log data shape
         logger.info(f"Loaded dataframe with shape: {df.shape}")
 
@@ -116,7 +130,7 @@ def load_all_data(config: dict) -> Dict[str, pd.DataFrame]:
         "line_data": "F03  2023 2024 pff_line_pass_blocking_efficiency.csv",
         "receiving_data": "F04  2023 2024 pff_receiving_summary.csv",
         "rushing_data": "F05  2023 2024 pff_rushing_summary.csv",
-        "team_stats": "F06  2024 2023 Team Stats.csv",
+        "team_stats": "F06  2024 2023 Team Stats.csv"
     }
 
     # Load each file

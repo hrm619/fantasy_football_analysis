@@ -136,3 +136,80 @@ def validate_numeric_columns(df: pd.DataFrame, columns: List[str], name: str) ->
         )
 
     return all_valid
+
+
+def validate_player_performance_data(df: pd.DataFrame) -> bool:
+    """
+    Validate player performance data specifically for VORP analysis.
+    
+    Args:
+        df: DataFrame containing player performance data
+        
+    Returns:
+        bool: True if validation passes, False otherwise
+    """
+    if df is None or df.empty:
+        logger.error("Player performance data is None or empty")
+        return False
+        
+    # Core columns required for VORP analysis
+    required_columns = {
+        'Player': str,
+        'FantPos': str,
+        'Team': str,
+        'Half_PPR': float,
+        'G': int
+    }
+    
+    # Check required columns exist and have correct types
+    all_valid = True
+    for col, expected_type in required_columns.items():
+        if col not in df.columns:
+            logger.error(f"Required column '{col}' missing from player performance data")
+            all_valid = False
+            continue
+            
+        if not pd.api.types.is_dtype_equal(df[col].dtype, expected_type):
+            logger.warning(f"Column '{col}' has incorrect type: {df[col].dtype}, expected {expected_type}")
+            all_valid = False
+            
+    # Validate position values
+    valid_positions = {'QB', 'RB', 'WR', 'TE'}
+    invalid_positions = set(df['FantPos'].unique()) - valid_positions
+    if invalid_positions:
+        logger.warning(f"Invalid positions found: {invalid_positions}")
+        all_valid = False
+        
+    # Validate games played
+    invalid_games = df[~df['G'].between(0, 17)]  # NFL season is 17 games
+    if not invalid_games.empty:
+        logger.warning(f"Found {len(invalid_games)} players with invalid games played values")
+        logger.warning(f"Invalid games range: {invalid_games['G'].min()} to {invalid_games['G'].max()}")
+        all_valid = False
+        
+    # Validate Half_PPR points
+    if df['Half_PPR'].isnull().any():
+        logger.error(f"Found {df['Half_PPR'].isnull().sum()} missing Half_PPR values")
+        all_valid = False
+        
+    # Check for negative points
+    negative_points = df[df['Half_PPR'] < 0]
+    if not negative_points.empty:
+        logger.warning(f"Found {len(negative_points)} players with negative Half_PPR points")
+        all_valid = False
+        
+    # Log summary statistics
+    logger.info("\nPlayer Performance Data Summary:")
+    logger.info(f"Total players: {len(df)}")
+    logger.info("\nPlayers by position:")
+    for pos in valid_positions:
+        count = len(df[df['FantPos'] == pos])
+        logger.info(f"  {pos}: {count} players")
+        
+    logger.info("\nPoints distribution:")
+    logger.info(f"  Min: {df['Half_PPR'].min():.2f}")
+    logger.info(f"  Max: {df['Half_PPR'].max():.2f}")
+    logger.info(f"  Mean: {df['Half_PPR'].mean():.2f}")
+    logger.info(f"  Median: {df['Half_PPR'].median():.2f}")
+    
+    return all_valid

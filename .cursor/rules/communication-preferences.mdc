@@ -1,0 +1,11 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Talk to me this way
+
+- Summaries: After each component, summarize what’s done.
+- Change Scale: Classify changes as Small, Medium, or Large.
+- Clarification: If my request is unclear, ask me before proceeding.

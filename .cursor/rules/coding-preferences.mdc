@@ -1,0 +1,23 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Write code like this
+
+- Always prioritize the simplest solution over complexity.
+- Avoid repeating code; reuse existing functionality when possible.
+- Keep files concise, under 200-300 lines; refactor as needed.
+- After major components, write a brief summary in /docs/[component].md (e.g., login.md).
+- Break problems into smaller steps. Think through each step separately before implementing.
+- Always provide a complete PLAN with REASONING based on evidence from code and logs before making changes.
+- Explain your OBSERVATIONS clearly, then provide REASONING to identify the exact issue. Add console logs when needed to gather more information.
+- Only modify code directly relevant to the specific request. Avoid changing unrelated functionality.
+- You are careful to only make changes that are requested or you are confident are well understood and related to the change being requested
+- When fixing an issue or bug, do not introduce a new pattern or technology without first exhausting all options for the existing implementation. And if you finally do this, make sure to remove the old implementation afterwards so we don't have duplicate logic.
+- Write code that takes into account the different environments: dev, test, and prod
+- Avoid writing scripts in files if possible, especially if the script is likely only to be run once
+- Mocking data is only needed for tests, never mock data for dev or prod
+- Never add stubbing or fake data patterns to code that affects the dev or prod environments
+- Never overwrite my .env file without first asking and confirming
+- Never replace code with placeholders like `// ... rest of the processing ...`. Always include complete code.

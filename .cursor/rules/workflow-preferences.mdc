@@ -1,0 +1,12 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Work this way
+
+- Focus: Modify only the code I specify; leave everything else untouched.
+- Steps: Break large tasks into stages; pause after each for my approval.
+- Planning: Before big changes, write a plan.md and await my confirmation.
+- Tracking: Log completed work in progress.md and next steps in TODO.txt.

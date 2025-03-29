@@ -21,9 +21,59 @@ def analyze_team_performance_correlation(player_df: pd.DataFrame, team_df: pd.Da
     """
     logger.info("Analyzing team performance correlations")
     
+    # Clean team data
+    team_df = team_df.dropna(subset=['Team (Full)', 'Team (Alt)', 'Team'])  # Remove rows with missing team names
+    team_df = team_df[team_df['Team (Full)'].str.strip() != '']  # Remove empty team names
+    
+    # Log input data shapes
+    logger.info(f"Input player_df shape: {player_df.shape}")
+    logger.info(f"Input team_df shape: {team_df.shape}")
+    
+    # Log available columns
+    logger.info(f"Player DataFrame columns: {player_df.columns.tolist()}")
+    logger.info(f"Team DataFrame columns: {team_df.columns.tolist()}")
+    
     # Ensure team dataframes has standardized team names
-    if 'Team_std' not in team_df.columns and 'Team' in team_df.columns:
-        team_df['Team_std'] = team_df['Team']
+    if 'Team_std' not in team_df.columns:
+        # Try different team name columns
+        team_name_cols = ['Team', 'Team (Alt)', 'Team (Full)', 'team_name']
+        for col in team_name_cols:
+            if col in team_df.columns:
+                team_df['Team_std'] = team_df[col]
+                logger.info(f"Using {col} for team name standardization")
+                break
+        else:
+            logger.error("No team name column found in team_df")
+            return {}
+    
+    # Ensure player_df has standardized team names
+    if 'Team_std' not in player_df.columns:
+        # Try different team name columns
+        team_name_cols = ['Team', 'Team (Alt)', 'Team (Full)', 'team_name']
+        for col in team_name_cols:
+            if col in player_df.columns:
+                player_df['Team_std'] = player_df[col]
+                logger.info(f"Using {col} for player team name standardization")
+                break
+        else:
+            logger.error("No team name column found in player_df")
+            return {}
+    
+    # Map team stats columns to expected names
+    column_mapping = {
+        'Passing Att': 'Passing Att',
+        'Passing Yds': 'Passing Yds',
+        'Rushing Att': 'Rushing Att',
+        'Rushing Yds': 'Rushing Yds',
+        'PF': 'PF',
+        'Yds': 'Yds'
+    }
+    
+    # Rename columns if needed
+    for old_col, new_col in column_mapping.items():
+        if old_col in team_df.columns and new_col not in team_df.columns:
+            team_df[new_col] = team_df[old_col]
+            logger.info(f"Renamed {old_col} to {new_col}")
     
     # Check for required columns
     required_team_cols = ['Team_std', 'PF', 'Yds', 'Passing Att', 'Passing Yds', 'Rushing Att', 'Rushing Yds']
@@ -57,11 +107,16 @@ def analyze_team_performance_correlation(player_df: pd.DataFrame, team_df: pd.Da
             logger.warning(f"No {pos} players found, skipping correlation analysis")
             continue
         
+        # Log available columns for this position
+        logger.info(f"Columns available for {pos}: {pos_df.columns.tolist()}")
+        
         # Merge with team data
         pos_team_df = pd.merge(pos_df, team_df, on='Team_std', how='inner')
         
         if pos_team_df.empty:
             logger.warning(f"Failed to match {pos} players with team data")
+            logger.info(f"Unique teams in player_df: {pos_df['Team_std'].unique()}")
+            logger.info(f"Unique teams in team_df: {team_df['Team_std'].unique()}")
             continue
         
         # Define correlation pairs based on position
@@ -113,8 +168,16 @@ def analyze_team_performance_correlation(player_df: pd.DataFrame, team_df: pd.Da
                         'Data_Points': len(valid_data)
                     }
                     position_correlations.append(correlation_data)
+                    logger.info(f"Calculated correlation for {pos}: {team_metric} vs {player_metric}")
     
-    results['position_team_correlations'] = pd.DataFrame(position_correlations)
+    # Create and log the correlation DataFrame
+    if position_correlations:
+        results['position_team_correlations'] = pd.DataFrame(position_correlations)
+        logger.info(f"Created correlation DataFrame with shape: {results['position_team_correlations'].shape}")
+        logger.info(f"Correlation DataFrame columns: {results['position_team_correlations'].columns.tolist()}")
+    else:
+        logger.warning("No correlations were calculated")
+        results['position_team_correlations'] = pd.DataFrame()
     
     # 3. Group player performance by team tiers
     team_tier_performance = []
@@ -162,6 +225,10 @@ def analyze_team_performance_correlation(player_df: pd.DataFrame, team_df: pd.Da
     
     if team_tier_performance:
         results['team_tier_performance'] = pd.concat(team_tier_performance, ignore_index=True)
+        logger.info(f"Created team tier performance DataFrame with shape: {results['team_tier_performance'].shape}")
+    else:
+        logger.warning("No team tier performance data was calculated")
+        results['team_tier_performance'] = pd.DataFrame()
     
     logger.info("Team performance correlation analysis completed")
     return results

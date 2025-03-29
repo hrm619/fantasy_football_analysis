@@ -213,6 +213,8 @@ def calculate_vbd_rankings(
     # Calculate VBD by ADP
     if "ADP" in result_df.columns:
         # Find VBD per ADP point
+        # Fill NaN ADP values with 999 to indicate undrafted players before any calculations
+        result_df["ADP"] = result_df["ADP"].fillna(999)
         result_df["VBD_per_ADP"] = result_df["VBD"] / result_df["ADP"]
 
         # Replace inf/NaN values

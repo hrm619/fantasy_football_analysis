@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import logging
 from typing import Dict, List, Tuple
+from .team_standardizer import standardize_team_names_across_datasets
+from src.utils.validation import validate_player_performance_data
 
 # Set up logging
 logging.basicConfig(
@@ -10,53 +12,17 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-def standardize_team_names(
-    data_dict: Dict[str, pd.DataFrame],
-) -> Dict[str, pd.DataFrame]:
+def standardize_team_names(data_dict: Dict[str, pd.DataFrame]) -> Dict[str, pd.DataFrame]:
     """
-    Standardize team names across all dataframes to ensure consistent joining.
-
+    Wrapper function that uses the team_standardizer module to standardize team names.
+    
     Args:
         data_dict: Dictionary of dataframes to process
-
+        
     Returns:
         Dict[str, pd.DataFrame]: Processed dataframes with standardized team names
     """
-    logger.info("Standardizing team names across datasets")
-
-    # Create a mapping dictionary from the preseason rankings
-    if "preseason_rankings" in data_dict:
-        team_mapping = {}
-        df = data_dict["preseason_rankings"]
-        if all(col in df.columns for col in ["Team", "Team (Alt)", "Team (Full)"]):
-            for idx, row in (
-                df[["Team", "Team (Alt)", "Team (Full)"]].drop_duplicates().iterrows()
-            ):
-                team_mapping[row["Team"]] = row["Team"]
-                team_mapping[row["Team (Alt)"]] = row["Team"]
-                team_mapping[row["Team (Full)"]] = row["Team"]
-
-        # Apply mapping to all dataframes
-        for key, df in data_dict.items():
-            if "Team" in df.columns:
-                data_dict[key]["Team_std"] = (
-                    df["Team"].map(team_mapping).fillna(df["Team"])
-                )
-            elif "team_name" in df.columns:
-                data_dict[key]["Team_std"] = (
-                    df["team_name"].map(team_mapping).fillna(df["team_name"])
-                )
-
-            # Validate mapping
-            if "Team_std" in data_dict[key].columns:
-                missing_mappings = data_dict[key][data_dict[key]["Team_std"].isnull()]
-                if not missing_mappings.empty:
-                    logger.warning(
-                        f"Missing team mappings in {key} dataset: {missing_mappings['Team'].unique() if 'Team' in missing_mappings.columns else missing_mappings['team_name'].unique()}"
-                    )
-
-    logger.info("Team name standardization completed")
-    return data_dict
+    return standardize_team_names_across_datasets(data_dict)
 
 
 def filter_season_data(
@@ -172,14 +138,14 @@ def create_master_player_dataset(data_dict: Dict[str, pd.DataFrame]) -> pd.DataF
         )
         logger.info(f"Merged team stats: {master_df.shape}")
 
+    # Calculate half-PPR points if not already present
+    if "Half_PPR" not in master_df.columns:
+        master_df = calculate_half_ppr_points(master_df)
+
     # Validate the final dataset
-    missing_data = master_df.isnull().sum()
-    if missing_data.sum() > 0:
-        logger.warning("Missing data in master dataset:")
-        for col, count in missing_data[missing_data > 0].items():
-            percentage = (count / len(master_df)) * 100
-            if percentage > 10:  # Only log columns with >10% missing
-                logger.warning(f"  - {col}: {count} missing values ({percentage:.1f}%)")
+    if not validate_player_performance_data(master_df):
+        logger.error("Player performance data validation failed")
+        return pd.DataFrame()
 
     logger.info(f"Master player dataset created with shape: {master_df.shape}")
     return master_df
@@ -277,3 +243,22 @@ def save_processed_data(df: pd.DataFrame, filename: str, output_path: str) -> No
     full_path = os.path.join(output_path, filename)
     df.to_csv(full_path, index=False)
     logger.info(f"Saved processed data to {full_path}")
+
+
+def load_csv_data(filepath: str) -> pd.DataFrame:
+    """
+    Load data from a CSV file.
+    
+    Args:
+        filepath: Path to the CSV file
+        
+    Returns:
+        pd.DataFrame: Loaded data
+    """
+    try:
+        df = pd.read_csv(filepath)
+        logger.info(f"Successfully loaded data from {filepath}")
+        return df
+    except Exception as e:
+        logger.error(f"Error loading data from {filepath}: {str(e)}")
+        return pd.DataFrame()
